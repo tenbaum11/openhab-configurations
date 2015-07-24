@@ -1,0 +1,511 @@
+import org.openhab.core.library.types.*
+import org.openhab.core.persistence.*
+import org.openhab.model.script.actions.*
+import java.lang.Math
+import java.lang.Integer
+import org.joda.time.*
+import java.util.*
+import org.eclipse.xtext.xbase.lib.*
+import org.openhab.core.items.*
+
+
+
+
+var String[] buffer
+var String[] linebuffer
+var int RadioID
+var int SensorID
+var int SUBID
+var int transmissions_old = 0
+var int transmissions_new = 0  
+var int transmissions_missed = 0 
+var int testint
+var String teststr = "nodata"
+var String testnew = "NA"
+var int hexint = 103
+
+
+rule "Initialize contact states"
+	when 
+		System started
+	then
+		Etek?.members.forEach(etek|
+			etek.postUpdate(OFF)
+		)
+end
+
+rule "Initialize MEGA SENSORS"
+	when
+		System started
+		//Time cron "0 * * * * ?"
+	then
+		println("Initialize MEGA Sensors")
+		//Node_Mega?.members.forEach(sensor|
+		//	sensor.postUpdate(teststr)
+		//)
+end
+
+rule "Initialize NANO SENSORS"
+	when
+		System started
+	then
+		Node_Nano?.members.forEach(sensor|
+			sensor.postUpdate(teststr)
+		)
+end
+
+rule "Initialize MESSAGES"
+	when
+		System started
+	then
+		Messages?.members.forEach(message|
+			message.postUpdate(testnew)
+		)
+end
+
+rule "Initialize Location"
+	when 
+		System started
+	then
+		DemoLocation.postUpdate(new PointType("52.5200066,13.4049540"))
+end
+
+
+rule "Update max and min temperatures"
+when
+	Item Weather_Temperature changed or
+	Time cron "0 0 0 * * ?" or
+	System started
+then	
+	postUpdate(Weather_Temp_Max, Weather_Temperature.maximumSince(now.toDateMidnight).state)
+	postUpdate(Weather_Temp_Min, Weather_Temperature.minimumSince(now.toDateMidnight).state)
+	logInfo("Weather", "Temperature evolved of " + Weather_Temperature.deltaSince(now.minusMinutes(2)) + " degrees.")
+end
+
+
+/** shows how to use sensor values from the past */
+rule "Persistence Demo"
+when
+	Time cron "0 * * * * ?"
+then	
+	if(Weather_Temperature.changedSince(now.minusMinutes(1))) {
+		logInfo("PersistenceDemo", "2 minutes ago, the temperature was " + Weather_Temperature.historicState(now.minusMinutes(2)) + " degrees.")
+	}
+end
+
+
+// Creates an item that stores the last update time of this item
+rule "Records last weather update time"
+when
+  Item Weather_Temperature received update
+then
+  postUpdate(Weather_LastUpdate, new DateTimeType())
+end
+
+// This rule will be used to test Scale transformation service
+rule "Compute humidex"
+when
+        Item Weather_Temperature changed or
+	Item Weather_Humidity changed
+then
+	var Number T = Weather_Temperature.state as DecimalType
+	var Number H = Weather_Humidity.state as DecimalType	
+	var Number x = 7.5 * T/(237.7 + T)
+	var Number e = 6.112 * Math::pow(10, x.doubleValue) * H/100
+	var Number humidex = T + (new Double(5) / new Double(9)) * (e - 10)
+	postUpdate(Weather_Humidex, humidex)
+end
+
+
+
+// kind:folder foldername:rpi*
+
+rule "Initialize CHART SENSOR DATA"
+	when
+		System started
+	then
+		var Double chartdouble = new Double(0)
+		//ChartSensorData?.members.forEach(data|
+			//data.postUpdate(chartdouble)
+		//)
+end
+
+rule "Arduino ARDUINO"  
+when   
+	   Item Arduino changed
+	   //Item Arduino received update  
+	   //Arduino.state!=null  
+then  	 
+	if(Arduino.state!=null )
+	{
+	  
+	  linebuffer = Arduino.state.toString.split("\n") 
+	  for (String element : linebuffer) {
+	  	
+			buffer = element.split(";")
+			var Integer nodeId = new Integer(buffer.get(0))
+			var Integer childId = new Integer(buffer.get(1))
+			var Integer msgType = new Integer(buffer.get(2))
+			var Integer ack = new Integer(buffer.get(3))
+			var Integer subType = new Integer(buffer.get(4))
+			var String msg = buffer.get(5)
+			
+			
+			
+			
+			
+			switch (nodeId) {
+				case 205: {
+					SensorID = new Integer(buffer.get(1))
+					switch (childId) {
+						
+						case 0 : postUpdate (MegaSensorsT0, buffer.get(5))
+						case 1 : postUpdate (MegaSensorsT1, buffer.get(5))
+						case 2 : postUpdate (MegaSensorsT2, buffer.get(5))
+						case 3 : postUpdate (MegaSensorsT3, buffer.get(5))
+						case 4 : postUpdate (MegaSensorsT4, buffer.get(5))
+						case 5 : postUpdate (MegaSensorsT5, buffer.get(5))
+						case 6 : postUpdate (MegaSensorsT6, buffer.get(5))
+						case 7 : postUpdate (MegaSensorsT7, buffer.get(5))
+						case 8 : postUpdate (MegaSensorsT8, buffer.get(5))
+						case 9 : postUpdate (MegaSensorsT9, buffer.get(5))
+						case 10 :postUpdate (MegaSensorsT10, buffer.get(5))
+						case 11 :postUpdate (MegaSensorsT11, buffer.get(5))
+						default: println("bad 205 sensor")
+						} /*switch (childId) */
+				} // case 205
+				case 204: {
+					SensorID = new Integer(buffer.get(1))
+					switch (childId) {
+						
+						case 4 : postUpdate  (UnoSensorsT0, buffer.get(5))
+						case 19 : postUpdate (UnoSensorsT1, buffer.get(5))
+						case 20 : postUpdate (UnoSensorsT2, buffer.get(5))
+						case 8 : postUpdate  (UnoSensorsT3, buffer.get(5))
+						case 9 : {
+							switch (subType) {
+								case 4 : postUpdate (UnoSensorsT4, buffer.get(5))
+								case 5 : postUpdate (UnoSensorsT5, buffer.get(5))
+								default: println("bad 204 subid")
+							}
+						} 
+						default: println("bad 204 sensor")
+						} /*switch (childId) */
+				} // case 204		
+				case 202: {
+					switch (childId) {
+						case 4 : postUpdate (NanoSensorsT0, buffer.get(5))
+						case 8 : postUpdate (NanoSensorsT1, buffer.get(5))
+						case 9 : {
+							switch (subType) {
+								case 4 : postUpdate (NanoSensorsT2, buffer.get(5))
+								case 5 : postUpdate (NanoSensorsT3, buffer.get(5))
+								default: println("bad 202 subid")
+							}
+						} // case 9
+						default: println("bad 202 sensor")
+					} /*switch (SensorID) */
+				} // case 202
+				default: println("bad node")
+			}
+	  }
+	 }
+end
+
+
+
+
+//********************************************************************************
+//Fourth part: some actions triggerd from 
+//OpenHAB GUI/Webinterface: rule ArdSwon
+//********************************************************************************
+rule NanoSwon
+when 
+    Item NanoSwitch changed from OFF to ON
+then
+    sendCommand(Arduino, "202;11;1;0;3;100\n")
+end
+
+rule NanoSwoff
+when 
+    Item NanoSwitch changed from ON to OFF
+then
+    sendCommand(Arduino, "202;11;1;0;3;0\n")			
+end
+
+
+rule MegaSwon
+when 
+    Item MegaSwitch changed from OFF to ON
+then
+    sendCommand(Arduino, "205;18;1;0;2;1\n")
+end
+
+rule MegaSwoff
+when 
+    Item MegaSwitch changed from ON to OFF
+then
+    sendCommand(Arduino, "205;18;1;0;2;0\n")			
+end
+
+rule UnoSwon
+when 
+    Item UnoSwitch changed from OFF to ON
+then
+    sendCommand(Arduino, "204;18;1;0;2;1\n")
+end
+
+rule UnoSwoff
+when 
+    Item UnoSwitch changed from ON to OFF
+then
+    sendCommand(Arduino, "204;18;1;0;2;0\n")			
+end
+
+
+
+
+rule "Nano Dimmed Light"
+	when
+		Item NanoDimmer received command
+	then
+		var Number percent = 0
+		if(NanoDimmer.state instanceof DecimalType) percent = NanoDimmer.state as DecimalType 
+			
+		if(receivedCommand==INCREASE) percent = percent + 5
+		if(receivedCommand==DECREASE) percent = percent - 5
+
+		if(percent<0)   percent = 0
+		if(percent>100) percent = 100
+		postUpdate(NanoDimmer, percent);
+		sendCommand(Arduino, "202;11;1;0;3;" + percent + "\n")
+end
+
+
+rule "Mega Dimmed Light"
+	when
+		Item MegaDimmer received command
+	then
+		var Number percent = 0
+		if(MegaDimmer.state instanceof DecimalType) percent = MegaDimmer.state as DecimalType 
+			
+		if(receivedCommand==INCREASE) percent = percent + 5
+		if(receivedCommand==DECREASE) percent = percent - 5
+
+		if(percent<0)   percent = 0
+		if(percent>100) percent = 100
+		postUpdate(MegaDimmer, percent);
+		sendCommand(Arduino, "205;18;1;0;3;" + percent + "\n")
+end
+
+rule "Uno Dimmed Light"
+	when
+		Item UnoDimmer received command
+	then
+		var Number percent = 0
+		if(UnoDimmer.state instanceof DecimalType) percent = UnoDimmer.state as DecimalType 
+			
+		if(receivedCommand==INCREASE) percent = percent + 5
+		if(receivedCommand==DECREASE) percent = percent - 5
+
+		if(percent<0)   percent = 0
+		if(percent>100) percent = 100
+		postUpdate(UnoDimmer, percent);
+		sendCommand(Arduino, "204;18;1;0;3;" + percent + "\n")
+end
+
+
+
+
+//********************************************************************************
+//Sensor Chart
+//********************************************************************************
+rule "Sensor_Chart Nano Temp"
+when 
+    Item NanoSensorsT1 received update  
+then
+	
+	var String NanoSensorsT1update = NanoSensorsT1.state.toString.trim
+	if(NanoSensorsT1update!="nodata") {
+		var Double nanoBMPtempF = new Double(NanoSensorsT1update)
+		postUpdate(Sensor_Temperature, nanoBMPtempF);
+	}
+	
+end
+
+rule "Sensor_Chart Nano Pressure Hg"
+when 
+    Item NanoSensorsT2 received update  
+then
+	
+	var String NanoSensorsT2update = NanoSensorsT2.state.toString.trim
+	if(NanoSensorsT2update!="nodata"){
+		var Double nanoBMPbaroHg = new Double(NanoSensorsT2update)
+		postUpdate(Sensor_Pressure, nanoBMPbaroHg);
+	}
+	//if(nanoBMPtempF!=null) 
+end
+
+
+
+//********************************************************************************
+//ETEK SWITCHES FOR MEGA
+//********************************************************************************
+
+rule "Etek A switch for Mega"
+when 
+    Item V_LIGHT_205_12 changed
+then
+	var String[] itemName = V_LIGHT_205_12.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_205_12.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+rule "Etek B switch for Mega"
+when 
+    Item V_LIGHT_205_13 changed
+then
+	var String[] itemName = V_LIGHT_205_13.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_205_13.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+rule "Etek C switch for Mega"
+when 
+    Item V_LIGHT_205_14 changed
+then
+	var String[] itemName = V_LIGHT_205_14.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_205_14.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+
+rule "Etek D switch for Mega"
+when 
+    Item V_LIGHT_205_15 changed
+then
+	var String[] itemName = V_LIGHT_205_15.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_205_15.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+rule "Etek E switch for Mega"
+when 
+    Item V_LIGHT_205_16 changed
+then
+	var String[] itemName = V_LIGHT_205_16.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_205_16.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+
+
+//********************************************************************************
+//ETEK SWITCHES FOR UNO
+//********************************************************************************
+
+rule "Etek A switch for Uno"
+when 
+    Item V_LIGHT_204_12 changed
+then
+	var String[] itemName = V_LIGHT_204_12.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_204_12.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+rule "Etek B switch for Uno"
+when 
+    Item V_LIGHT_204_13 changed
+then
+	var String[] itemName = V_LIGHT_204_13.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_204_13.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+rule "Etek C switch for Uno"
+when 
+    Item V_LIGHT_204_14 changed
+then
+	var String[] itemName = V_LIGHT_204_14.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_204_14.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+
+rule "Etek D switch for Uno"
+when 
+    Item V_LIGHT_204_15 changed
+then
+	var String[] itemName = V_LIGHT_204_15.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_204_15.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+rule "Etek E switch for Uno"
+when 
+    Item V_LIGHT_204_16 changed
+then
+	var String[] itemName = V_LIGHT_204_16.getName().toString().split("_")
+	var Integer state = 0
+	if (V_LIGHT_204_16.state == ON) { state = 1 }
+		else { state = 0 }
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+end
+
+
+
+
+rule "Converter HSB RGB LED"
+	when
+		Item RGB_LED received command
+	then
+		val h= (RGB_LED.state as HSBType).hue
+		val s= (RGB_LED.state as HSBType).saturation
+		val b= (RGB_LED.state as HSBType).brightness
+		val red = (RGB_LED.state as HSBType).red
+		val green = (RGB_LED.state as HSBType).green
+		val blue = (RGB_LED.state as HSBType).blue
+
+		var  red1 = Math::round(red.doubleValue)
+		var  green1 = Math::round(green.doubleValue)
+		var  blue1 = Math::round(blue.doubleValue)
+
+		var String redhex = red1.toHexString
+		var String greenhex = green1.toHexString
+		var String bluehex = blue1.toHexString
+		var String RGBhexstr = redhex + greenhex + bluehex
+		
+		println("")
+		println("RGB COLOR: " +  RGB_LED.state as HSBType)
+		println(RGBhexstr)
+		println("")
+end
+
+
+
+
+
+
+
+
+// ==================================================================================
+// END RULES
+// ==================================================================================
