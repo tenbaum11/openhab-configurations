@@ -8,6 +8,6 @@ Items {
 	DemoSwitch,NoOfLights,Window_GF_Toilet,Heating* : strategy = everyChange, everyMinute, restoreOnStartup
 	
 	// let's only store temperature values in rrd
-	Temperature*, Weather_Chart*, Sensor_Chart*, ChartSensorData*, Date : strategy = everyMinute, restoreOnStartup
+	Temperature*, Weather_Chart*, TIMERS, Sensor_Chart*, ChartSensorData*, Date : strategy = everyMinute, restoreOnStartup
 	Sensor_Chart* : strategy = everyMinute
 }

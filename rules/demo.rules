@@ -3,10 +3,15 @@ import org.openhab.core.persistence.*
 import org.openhab.model.script.actions.*
 import java.lang.Math
 import java.lang.Integer
-import org.joda.time.*
-import java.util.*
+//import org.joda.time.*
+//import java.util.*
 import org.eclipse.xtext.xbase.lib.*
 import org.openhab.core.items.*
+import org.joda.time.DateTime
+//import org.joda.time.*
+//import org.joda.time.format.*
+
+
 
 
 
@@ -24,6 +29,64 @@ var String teststr = "nodata"
 var String testnew = "NA"
 var int hexint = 103
 
+var Timer timer = null
+
+// 
+rule "Timer2 Demo"
+when
+	Item timertest2 received command
+then
+	if(receivedCommand==ON) {
+		if(timer==null) {
+			// first ON command, so create a timer to turn the light off again
+			timer = createTimer(now.plusSeconds(10)) [|
+				sendCommand(timertest2, OFF)
+			]
+		} else {
+			// subsequent ON command, so reschedule the existing timer
+			timer.reschedule(now.plusSeconds(10))
+		}
+	} else if(receivedCommand==OFF) {
+		// remove any previously scheduled timer
+		if(timer!=null) {
+			timer.cancel
+			timer = null
+		}	
+	}
+end
+
+
+rule "TIMER"
+	when
+		Item timertest received command or
+		System started or
+		Time cron "0 0/5 * * * ?"
+	then
+		var Number percent = 0
+		println("")
+		println("SECONDS SINCE 1970:")
+		println("")
+		var DateTime mysensortime = now
+		println("DATE 1970:  "+mysensortime) 
+		var long execDuration = mysensortime.getMillis()/1000L
+		print("SECONDS SINCE 1970 zzzz  :    ")
+		println("")
+		println(execDuration)
+		println("")
+end
+
+
+rule "Initialize timers states"
+	when 
+		System started
+	then
+	
+	if (sleep_timer2 == Uninitialized) {
+		postUpdate(sleep_timer2, 22)
+	}
+	else { postUpdate(sleep_timer2, 22) }
+		
+end
 
 rule "Initialize contact states"
 	when 
@@ -33,6 +96,15 @@ rule "Initialize contact states"
 			etek.postUpdate(OFF)
 		)
 end
+
+rule "Initialize contact states 22"
+	when 
+		System started
+	then
+		var String vstring = "teststring"
+		postUpdate (V_IRSENDER_212_26, vstring)
+end
+
 
 rule "Initialize MEGA SENSORS"
 	when
@@ -206,6 +278,12 @@ then
 						default: println("bad 202 sensor")
 					} /*switch (SensorID) */
 				} // case 202
+				case 212: {
+					switch (childId) {
+						case 3 : postUpdate (V_IRSENDER_212_26, buffer.get(5))
+						default: println("bad 212 sensor")
+					} /*switch (SensorID) */
+				} // case 202
 				default: println("bad node")
 			}
 	  }
@@ -360,7 +438,8 @@ then
 	var Integer state = 0
 	if (V_LIGHT_205_12.state == ON) { state = 1 }
 		else { state = 0 }
-	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+	//sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
+	sendCommand(Arduino, "212;3;1;0;2;1\n")
 end
 
 rule "Etek B switch for Mega"
@@ -473,6 +552,63 @@ end
 
 
 
+rule "TV Code Volume Up"
+when 
+    Item V_IRSENDER_212_22 changed
+then
+	var String[] itemName = V_IRSENDER_212_22.getName().toString().split("_")
+	var long dpayload = 551502015
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;32;"+dpayload+"\n")	
+	println("xxx TV Code Volume Up:    ")
+
+end
+
+
+rule "TV Code Volume Down"
+when 
+    Item V_IRSENDER2_212_22 changed
+then
+	var String[] itemName = V_IRSENDER2_212_22.getName().toString().split("_")
+	var long dpayload = 551534655
+	//sendCommand(Arduino, itemName.get(3)+";"+itemName.get(4)+";1;0;32;"+dpayload+"\n")	
+	print("TV Code Volume Down:    ")
+	//println(itemName.get(3)+";"+itemName.get(4)+";1;0;32;"+dpayload+"\n")
+	sendCommand(Arduino, "212;22;1;0;32;551534655\n")
+	println("212;22;1;0;32;551534655")
+end
+
+
+rule "TV Buttons"
+when 
+    Item TV_Command changed
+then
+	var Integer NODE_IR = 212
+	var Integer CID_IR = 22
+	var Number buttonval = TV_Command.state as DecimalType 
+	
+	
+	
+	//var String[] itemName = V_IRSENDER_212_22.getName().toString().split("_")
+	//var long dpayload = 551502015
+	var Number dpayload = buttonval
+	//sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;32;"+dpayload+"\n")	
+	sendCommand(Arduino, NODE_IR+";"+CID_IR+";1;0;32;"+dpayload+"\n")	
+	println("TV Button"+NODE_IR+"_"+CID_IR+"_"+buttonval)
+	// first ON command, so create a timer to turn the light off again
+	 // subsequent ON command, so reschedule the existing timer
+		// if(timer==null) {	
+			// timer = createTimer(now.plusSeconds(10)) [|
+				// sendCommand(Light_GF_Corridor_Ceiling, OFF)
+			// ]
+		// } else {
+			// timer.reschedule(now.plusSeconds(10))
+		// }
+
+end
+
+
+
+
 rule "Converter HSB RGB LED"
 	when
 		Item RGB_LED received command
@@ -498,6 +634,19 @@ rule "Converter HSB RGB LED"
 		println(RGBhexstr)
 		println("")
 end
+
+// rule "TIMER INIT"
+	// when
+		// System started
+	// then
+		// var Number timernum = 33
+//		if(DimmedLight.state instanceof DecimalType ) percent = DimmedLight.state as DecimalType
+		// if(sleep_timer2.state!=NULL){
+		// postUpdate(sleep_timer2, timernum);
+		// }
+// end
+
+
 
 
 

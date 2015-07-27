@@ -1,16 +1,18 @@
 Group All
 Group APT		(All)
 Group Nodes		(All)
-Group Sensors	<sensor> (Nodes)
+Group Sensors	<sensor32> (Nodes)
 Group Messages	(All)
 Group Weather 	(All)
 Group Outdoors 	(All)
 Group Commands  (All)
 
-Group Node_Nano "Nano Node"  <node_n> (Nodes)
-Group Node_Mega "Mega Node"  <node_m> (Nodes)
-Group Node_Uno  "Uno Node"   <node_u> (Nodes)
+Group Node_Nano "Nano Node"  <node_n32> (Nodes)
+Group Node_Mega "Mega Node"  <node_m32> (Nodes)
+Group Node_Uno  "Uno Node"   <node_u32> (Nodes)
+Group IR2 (All)
 
+DateTime Datetest			"Date [%1$tA, %1$td.%1$tm.%1$tY]"	<calendar>	{ ntp="Europe/Berlin:de_DE" }
 
 /* active groups */
 Group:Switch:OR(ON, OFF) 		Lights 		"All Lights  [(%d)]" 								(All)
@@ -42,7 +44,7 @@ Location DemoLocation			"Brandenburg Gate Berlin"
 
 
 /* ARDUINO DATA ITEMS */
-String Arduino "Arduino"  { serial="COM7" } 
+String Arduino "Arduino"  { serial="COM7@115200" } 
 
 Switch UnoSwitch	"Uno Switch"			(APT, Lights)
 Dimmer UnoDimmer 	"Uno Dimmer[%d %%]"		<slider> 	(APT, Lights)
@@ -56,33 +58,33 @@ Dimmer MegaDimmer 	"Mega Dimmer[%d %%]"	<slider> 	(APT, Lights)
 
 
 /* NANO NODE ITEMS */
-String UnoSensorsT0 	"Uno: LDR Sensor 	[%s]"		<node_n> 	(APT, Node_Uno)
-String UnoSensorsT1 	"Uno: Therm Sensor 	[%s]"		<node_n> 	(APT, Node_Uno)
-String UnoSensorsT2 	"Uno: PIR Sensor 	[%s]"		<node_n> 	(APT, Node_Uno)
-String UnoSensorsT3 	"Uno: Temp Sensor 	[%s °F]"	<node_n> 	(APT, Node_Uno)
-String UnoSensorsT4		"Uno: Baro Sensor 	[%s inHg]" 	<node_n>	(APT, Node_Uno)
-String UnoSensorsT5 	"Uno: Forecast 		[%s %%]"	<node_n> 	(APT, Node_Uno)
+String UnoSensorsT0 	"Uno: LDR Sensor 	[%s]"		<node_u32> 	(APT, Node_Uno)
+String UnoSensorsT1 	"Uno: Therm Sensor 	[%s]"		<node_u32> 	(APT, Node_Uno)
+String UnoSensorsT2 	"Uno: PIR Sensor 	[%s]"		<node_u32> 	(APT, Node_Uno)
+String UnoSensorsT3 	"Uno: Temp Sensor 	[%s °F]"	<node_u32> 	(APT, Node_Uno)
+String UnoSensorsT4		"Uno: Baro Sensor 	[%s inHg]" 	<node_u32>	(APT, Node_Uno)
+String UnoSensorsT5 	"Uno: Forecast 		[%s %%]"	<node_u32> 	(APT, Node_Uno)
 
 
 /* NANO NODE ITEMS */
-String NanoSensorsT0 	"Nano: LDR Sensor 	[%s]"		<node_n> 	(APT, Node_Nano)
-String NanoSensorsT1 	"Nano: Temp Sensor 	[%s °F]"	<node_n> 	(APT, Node_Nano)
-String NanoSensorsT2	"Nano: Baro Sensor 	[%s inHg]" 	<node_n>	(APT, Node_Nano)
-String NanoSensorsT3 	"Nano: Forecast 	[%s %%]"	<node_n> 	(APT, Node_Nano)
+String NanoSensorsT0 	"Nano: LDR Sensor 	[%s]"		<node_n32> 	(APT, Node_Nano)
+String NanoSensorsT1 	"Nano: Temp Sensor 	[%s °F]"	<node_n32> 	(APT, Node_Nano)
+String NanoSensorsT2	"Nano: Baro Sensor 	[%s inHg]" 	<node_n32>	(APT, Node_Nano)
+String NanoSensorsT3 	"Nano: Forecast 	[%s %%]"	<node_n32> 	(APT, Node_Nano)
 
 /* MEGA NODE ITEMS */
-String MegaSensorsT0 	"Mega Sensor 0 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT1 	"Mega Sensor 1 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT2 	"Mega Sensor 2 [%s]" 	<node_m>	(APT, Node_Mega)
-String MegaSensorsT3 	"Mega Sensor 3 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT4	"Mega Sensor 4 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT5 	"Mega Sensor 5 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT6 	"Mega Sensor 6 [%s]" 	<node_m>	(APT, Node_Mega)
-String MegaSensorsT7 	"Mega Sensor 7 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT8 	"Mega Sensor 8 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT9 	"Mega Sensor 9 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT10 	"Mega Sensor 10 [%s]"	<node_m> 	(APT, Node_Mega)
-String MegaSensorsT11 	"Mega Sensor 11 [%s]"	<node_m> 	(APT, Node_Mega)
+String MegaSensorsT0 	"Mega Sensor 0 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT1 	"Mega Sensor 1 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT2 	"Mega Sensor 2 [%s]" 	<node_m32>	(APT, Node_Mega)
+String MegaSensorsT3 	"Mega Sensor 3 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT4	"Mega Sensor 4 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT5 	"Mega Sensor 5 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT6 	"Mega Sensor 6 [%s]" 	<node_m32>	(APT, Node_Mega)
+String MegaSensorsT7 	"Mega Sensor 7 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT8 	"Mega Sensor 8 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT9 	"Mega Sensor 9 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT10 	"Mega Sensor 10 [%s]"	<node_m32> 	(APT, Node_Mega)
+String MegaSensorsT11 	"Mega Sensor 11 [%s]"	<node_m32> 	(APT, Node_Mega)
 
 
 
@@ -116,7 +118,7 @@ Switch V_LIGHT_204_16	"Etek E (uno)"		(APT, Lights, Etek)
 
 Color  RGB_LED			"RGB LED"				<slider>	(APT, Lights)
 
-
+ 
 /* Sensor Window */
 Group Sensor_Chart	
 Group Sensor_Chart2												 (Sensors)
@@ -130,22 +132,31 @@ Number Sensor_Chart_Period		"Chart Period"
 
 String w   "Today in Burlington VT[%s]"   <w>  { http="<[http://api.wunderground.com/api/378571eb1db3e574/forecast/q/VT/Burlington.xml:36000:XSLT(wunderground_icon_forecast.xsl)]"} 
 String wdatas   "T [%s]" <w>   { http="<[http://api.wunderground.com/api/378571eb1db3e574/conditions/q/VT/Burlington.xml:36000:XSLT(wunderground_conditions_tempf.xsl)]"} 
-
+ 
 
 // ############## IR COMMANDS #######################################
-Number TV_Command 			"TV Buttons"   	<tvremoteMD>		(APT, TV, IR)
-Switch V_IR_SENDER_202_1 	"TV Mute" 	 		(APT, TV, IR) 	{autoupdate="false"}
-Switch V_IR_SENDER_202_2 	"TV Volume Step Up" 	 (APT, TV, IR) {autoupdate="false"}
-Switch V_IR_SENDER_202_3 	"TV Volume Step Down" 	 (APT, TV, IR) {autoupdate="false")
-// Switch V_IR_SENDER_202_4 	"TV Sleep" 	 (APT, TV, IR) {autoupdate="false")
-// Switch V_IR_SENDER_202_5 	"TV Mute" 	 (APT, TV, IR) {autoupdate="false")
-// Switch V_IR_SENDER_202_6 	"TV" 	 (APT, TV, IR) {autoupdate="false")
-// Switch V_IR_SENDER_202_7	"TV" 	 (APT, TV, IR) {autoupdate="false")
+
+Number TV_Command 			"TV Buttons"   	 <tvremoteMD32>		(APT, TV, IR)
+Switch V_IRSENDER_212_21 	"TV Mute" 	 			 			(APT, TV, IR) 	
+Switch V_IRSENDER_212_22 	"TV Volume Step Up" 	 			(APT, TV, IR) 	
+Switch V_IRSENDER2_212_22 	"TV Volume Step Down" 	 			(APT, TV, IR) 	
+Switch V_IRSENDER_212_24 	"TV Volume Step Up" 	 			(APT, TV, IR) 
+Switch V_IRSENDER_212_25 	"TV Volume Step Up" 	 			(APT, TV, IR) 	
+String V_IRSENDER_212_26	"IR Msg Recv String [%s]"			(IR, IR2)
+Number V_IRSENDER_212_27	"IR Msg Recv Value"					(IR) 
 
 
-Number Scene_General		"Scene [MAP(tv.map):%s]"			<sofa>
+Number RH_Command 	"Radiohead TX"   	 		<rf32>		(APT, RF)
+String RH_Sender 	"Radiohead RX ID [%s]" 		<rf32>		(APT, RF)
+Number RH_Msg 		"Radiohead RX Msg"   	 	<rf32>		(APT, RF)
 
-/* end of script */"Frontdoor [MAP(en.map):%s]"
+Number sleep_timer2 		"Timer [%.1f min]"			<timer32> (TIMERS) 
+Number Scene_General		"Scene"		 <sofamood32> {autoupdate="true"}
+
+Switch timertest 	"set timer" 		(All)
+Switch timertest2 	"set timer2" 		(All)
+//Number Scene_General		"Scene [MAP(tv.map):%s]"			<sofa>
+// end of script */"Frontdoor [MAP(en.map):%s]" */
 
 
 

@@ -1,31 +1,8 @@
-sitemap demo label="Demo House"
+sitemap demo label="Apartment"
 {
 
-	Frame {
-		Group item=APT label="Apartment" icon="apartment_iconA"
-		//Group item=Lights label="Lights" icon="socket"
-		Group item=Nodes label="Nodes" icon="sensor_node"
-		Group item=Sensors label="Sensors" icon="sensor"
-		Group item=Messages label="Messages" icon="cmd_msg"
-		Group item=Outdoors label="Outdoor" icon="garden" 
-	}
-
-	
-	Frame label="Quick Control" {
-		//Switch item=Lights
-		//Group item=Lights	
-		Switch item=Etek
-		Group item=Etek
-		Slider item=NanoDimmer
-		Switch item NanoSwitch
-		Slider item=MegaDimmer
-		Switch item MegaSwitch
-		Slider item=UnoDimmer
-		Switch item UnoSwitch
-		Colorpicker item=RGB_LED icon="slider"
-	}
-	
 	Frame label="Weather" {
+		Text item=Date
 		Text item=w 
 		Text item=Weather_Temperature valuecolor=[Weather_LastUpdate=="Uninitialized"="lightgray",Weather_LastUpdate>90="lightgray",>25="orange",>15="green",>5="orange",<=5="blue"] {
 			Frame {
@@ -43,42 +20,46 @@ sitemap demo label="Demo House"
 			}
 		}
 	}
-	Frame label="Date" {
-		Text item=Date
-	}
-	
-	
-		Frame label="Control" {
+	Frame label="Control" {
 		Text label="Apartment" icon="house" {
-			Frame label="Apartment Lights" {
-				Switch item=V_LIGHT_205_12  mappings=[ON="On", OFF="Off"]
-				Switch item=V_LIGHT_205_13  mappings=[ON="On", OFF="Off"]
-				Switch item=V_LIGHT_205_14  mappings=[ON="On", OFF="Off"]
-				Switch item=V_LIGHT_205_15  mappings=[ON="On", OFF="Off"]
-				Switch item=V_LIGHT_205_16  mappings=[ON="On", OFF="Off"]
-			}
-			Frame label="TV Remote Commands" {
-				Switch item=V_IR_SENDER_202_1
-				Switch item=V_IR_SENDER_202_2 
-				Switch item=V_IR_SENDER_202_3
-				Switch item=TV_Command label="Sound" mappings=[1=MUTE, 2=VOLUP, 3=VOLDOWN]
-				Switch item=TV_Command label="Input" mappings=[4=ROKU, 5=CHROME,6=ANTENNA]
-			}
+
 			Frame label="Mood Lighting" {
 				Selection item=Scene_General label="Scene Selection" mappings=[0=off, 1=TV, 2=Bedtime, 3=Reading, 4=Morning, 5=Away, 6=DogsAlone, 7=Motion]
-				Switch item=Scene_General label="Scene" mappings=[1=TV, 2=Dinner, 3=Reading]
-				Setpoint item=Temperature_Setpoint minValue=16 maxValue=28 step=0.5
+				Switch item=Scene_General label="Scene" mappings=[1=TV, 2=Dinner, 3=Reading, 4=TV, 5=Dinner, 6=Reading]
+				//Setpoint item=Temperature_Setpoint minValue=16 maxValue=28 step=0.5
+			}
+			Frame label="TV Control" {
+				Switch item=TV_Command label="TV SOUND" mappings=[551502015=MUTE, 2=VOL_UP, 3=VOL_DOWN]
+				Switch item=TV_Command label="TV INPUT" mappings=[4=ROKU, 5=CHROME, 6=ANTENNA]
+				Text item=V_IRSENDER_212_26
+				Switch item=V_IRSENDER_212_21  label="TV Mute" 	 			 			
+				Switch item=V_IRSENDER_212_22  label="TV Volume Step Up "
+				Switch item=V_IRSENDER2_212_22 label="TV Volume Step Down" 	
+				Group item=IR2
 			}
 			Frame label="Map/Location" {
 				Mapview item=DemoLocation height=10
 			}
 			
 		}
+		Text label="IR Comms" icon="infrared32" {
+			Text item=V_IRSENDER_212_26   label="IR Msg Recv String [%s]"	
+			Switch item=V_IRSENDER_212_21  label="TV Mute" 	 
+		}
+		Text label="RF Comms" icon="rf32" {
+			Text item=RH_Command  	 		
+			Text item=RH_Sender	
+			Text item=RH_Msg  
+		}
 	}
-	
-	
-	
-	
+	Frame label="Sensor Data" {
+		Group item=Nodes label="Nodes" icon="sensor_node32"
+		Group item=Sensors label="Sensors" icon="sensor32"
+		Group item=Messages label="Messages" icon="cmd_msg32"
+	}
+	Frame label="Quick Control" {
+		Colorpicker item=RGB_LED icon="slider"
+	}
 	Frame label="Data Plots" {
 		Text item=Sensors_Online {
 			Frame {
@@ -89,6 +70,10 @@ sitemap demo label="Demo House"
 		}
 	}
 	
+	// Frame label="Quick Look" {
+		// Setpoint item=sleep_timer2  minValue=0 maxValue=500 step=4
+		// Switch item=timertest2
+	// } 
 	
 	
 		
