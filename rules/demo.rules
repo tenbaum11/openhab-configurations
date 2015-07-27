@@ -3,19 +3,14 @@ import org.openhab.core.persistence.*
 import org.openhab.model.script.actions.*
 import java.lang.Math
 import java.lang.Integer
-//import org.joda.time.*
-//import java.util.*
+import org.joda.time.*
+import java.util.*
 import org.eclipse.xtext.xbase.lib.*
 import org.openhab.core.items.*
-import org.joda.time.DateTime
-//import org.joda.time.*
-//import org.joda.time.format.*
 
 
 
-
-
-
+var int ms_main = 0
 var String[] buffer
 var String[] linebuffer
 var int RadioID
@@ -29,64 +24,6 @@ var String teststr = "nodata"
 var String testnew = "NA"
 var int hexint = 103
 
-var Timer timer = null
-
-// 
-rule "Timer2 Demo"
-when
-	Item timertest2 received command
-then
-	if(receivedCommand==ON) {
-		if(timer==null) {
-			// first ON command, so create a timer to turn the light off again
-			timer = createTimer(now.plusSeconds(10)) [|
-				sendCommand(timertest2, OFF)
-			]
-		} else {
-			// subsequent ON command, so reschedule the existing timer
-			timer.reschedule(now.plusSeconds(10))
-		}
-	} else if(receivedCommand==OFF) {
-		// remove any previously scheduled timer
-		if(timer!=null) {
-			timer.cancel
-			timer = null
-		}	
-	}
-end
-
-
-rule "TIMER"
-	when
-		Item timertest received command or
-		System started or
-		Time cron "0 0/5 * * * ?"
-	then
-		var Number percent = 0
-		println("")
-		println("SECONDS SINCE 1970:")
-		println("")
-		var DateTime mysensortime = now
-		println("DATE 1970:  "+mysensortime) 
-		var long execDuration = mysensortime.getMillis()/1000L
-		print("SECONDS SINCE 1970 zzzz  :    ")
-		println("")
-		println(execDuration)
-		println("")
-end
-
-
-rule "Initialize timers states"
-	when 
-		System started
-	then
-	
-	if (sleep_timer2 == Uninitialized) {
-		postUpdate(sleep_timer2, 22)
-	}
-	else { postUpdate(sleep_timer2, 22) }
-		
-end
 
 rule "Initialize contact states"
 	when 
@@ -96,15 +33,6 @@ rule "Initialize contact states"
 			etek.postUpdate(OFF)
 		)
 end
-
-rule "Initialize contact states 22"
-	when 
-		System started
-	then
-		var String vstring = "teststring"
-		postUpdate (V_IRSENDER_212_26, vstring)
-end
-
 
 rule "Initialize MEGA SENSORS"
 	when
@@ -208,9 +136,10 @@ when
 	   //Item Arduino received update  
 	   //Arduino.state!=null  
 then  	 
+	
 	if(Arduino.state!=null )
 	{
-	  
+	  //println("zzzzzzzzz")
 	  linebuffer = Arduino.state.toString.split("\n") 
 	  for (String element : linebuffer) {
 	  	
@@ -221,11 +150,7 @@ then
 			var Integer ack = new Integer(buffer.get(3))
 			var Integer subType = new Integer(buffer.get(4))
 			var String msg = buffer.get(5)
-			
-			
-			
-			
-			
+
 			switch (nodeId) {
 				case 205: {
 					SensorID = new Integer(buffer.get(1))
@@ -246,10 +171,9 @@ then
 						default: println("bad 205 sensor")
 						} /*switch (childId) */
 				} // case 205
-				case 204: {
+				case 209: {
 					SensorID = new Integer(buffer.get(1))
 					switch (childId) {
-						
 						case 4 : postUpdate  (UnoSensorsT0, buffer.get(5))
 						case 19 : postUpdate (UnoSensorsT1, buffer.get(5))
 						case 20 : postUpdate (UnoSensorsT2, buffer.get(5))
@@ -258,12 +182,13 @@ then
 							switch (subType) {
 								case 4 : postUpdate (UnoSensorsT4, buffer.get(5))
 								case 5 : postUpdate (UnoSensorsT5, buffer.get(5))
-								default: println("bad 204 subid")
+								default: println("bad 209 subid")
 							}
 						} 
-						default: println("bad 204 sensor")
+						default: println("bad 209 sensor")
 						} /*switch (childId) */
-				} // case 204		
+						
+				} // case 209		
 				case 202: {
 					switch (childId) {
 						case 4 : postUpdate (NanoSensorsT0, buffer.get(5))
@@ -278,18 +203,31 @@ then
 						default: println("bad 202 sensor")
 					} /*switch (SensorID) */
 				} // case 202
-				case 212: {
-					switch (childId) {
-						case 3 : postUpdate (V_IRSENDER_212_26, buffer.get(5))
-						default: println("bad 212 sensor")
-					} /*switch (SensorID) */
-				} // case 202
 				default: println("bad node")
 			}
 	  }
 	 }
 end
 
+rule "sensor main time update"
+when
+	Time cron  "0 * * * * ?"  //everyminute
+then
+	ms_main = ms_main + 1
+	postUpdate(MS_MAIN_TEST, ms_main)
+end
+		
+rule "BMP TEMP"
+when
+	Item MS_MAIN_TEST changed
+then
+	postUpdate(MS_BMP_TEMP, MS_MAIN_TEST.state.toString.trim)
+	// postUpdate(MS_BMP_BARRO, NanoSensorsT1.state.toString.trim)
+	// postUpdate(MS_DHT_TEMP, NanoSensorsT1.state.toString.trim)
+	// postUpdate(MS_DHT_RHUM, NanoSensorsT1.state.toString.trim) 
+	// postUpdate(MS_PIR, NanoSensorsT1.state.toString.trim)
+	// postUpdate(MS_THERM, NanoSensorsT1.state.toString.trim)
+end
 
 
 
@@ -330,14 +268,14 @@ rule UnoSwon
 when 
     Item UnoSwitch changed from OFF to ON
 then
-    sendCommand(Arduino, "204;18;1;0;2;1\n")
+    sendCommand(Arduino, "209;18;1;0;2;1\n")
 end
 
 rule UnoSwoff
 when 
     Item UnoSwitch changed from ON to OFF
 then
-    sendCommand(Arduino, "204;18;1;0;2;0\n")			
+    sendCommand(Arduino, "209;18;1;0;2;0\n")			
 end
 
 
@@ -389,7 +327,7 @@ rule "Uno Dimmed Light"
 		if(percent<0)   percent = 0
 		if(percent>100) percent = 100
 		postUpdate(UnoDimmer, percent);
-		sendCommand(Arduino, "204;18;1;0;3;" + percent + "\n")
+		sendCommand(Arduino, "209;18;1;0;3;" + percent + "\n")
 end
 
 
@@ -438,8 +376,7 @@ then
 	var Integer state = 0
 	if (V_LIGHT_205_12.state == ON) { state = 1 }
 		else { state = 0 }
-	//sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
-	sendCommand(Arduino, "212;3;1;0;2;1\n")
+	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
 end
 
 rule "Etek B switch for Mega"
@@ -495,33 +432,33 @@ end
 
 rule "Etek A switch for Uno"
 when 
-    Item V_LIGHT_204_12 changed
+    Item V_LIGHT_209_12 changed
 then
-	var String[] itemName = V_LIGHT_204_12.getName().toString().split("_")
+	var String[] itemName = V_LIGHT_209_12.getName().toString().split("_")
 	var Integer state = 0
-	if (V_LIGHT_204_12.state == ON) { state = 1 }
+	if (V_LIGHT_209_12.state == ON) { state = 1 }
 		else { state = 0 }
 	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
 end
 
 rule "Etek B switch for Uno"
 when 
-    Item V_LIGHT_204_13 changed
+    Item V_LIGHT_209_13 changed
 then
-	var String[] itemName = V_LIGHT_204_13.getName().toString().split("_")
+	var String[] itemName = V_LIGHT_209_13.getName().toString().split("_")
 	var Integer state = 0
-	if (V_LIGHT_204_13.state == ON) { state = 1 }
+	if (V_LIGHT_209_13.state == ON) { state = 1 }
 		else { state = 0 }
 	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
 end
 
 rule "Etek C switch for Uno"
 when 
-    Item V_LIGHT_204_14 changed
+    Item V_LIGHT_209_14 changed
 then
-	var String[] itemName = V_LIGHT_204_14.getName().toString().split("_")
+	var String[] itemName = V_LIGHT_209_14.getName().toString().split("_")
 	var Integer state = 0
-	if (V_LIGHT_204_14.state == ON) { state = 1 }
+	if (V_LIGHT_209_14.state == ON) { state = 1 }
 		else { state = 0 }
 	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
 end
@@ -529,81 +466,24 @@ end
 
 rule "Etek D switch for Uno"
 when 
-    Item V_LIGHT_204_15 changed
+    Item V_LIGHT_209_15 changed
 then
-	var String[] itemName = V_LIGHT_204_15.getName().toString().split("_")
+	var String[] itemName = V_LIGHT_209_15.getName().toString().split("_")
 	var Integer state = 0
-	if (V_LIGHT_204_15.state == ON) { state = 1 }
+	if (V_LIGHT_209_15.state == ON) { state = 1 }
 		else { state = 0 }
 	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
 end
 
 rule "Etek E switch for Uno"
 when 
-    Item V_LIGHT_204_16 changed
+    Item V_LIGHT_209_16 changed
 then
-	var String[] itemName = V_LIGHT_204_16.getName().toString().split("_")
+	var String[] itemName = V_LIGHT_209_16.getName().toString().split("_")
 	var Integer state = 0
-	if (V_LIGHT_204_16.state == ON) { state = 1 }
+	if (V_LIGHT_209_16.state == ON) { state = 1 }
 		else { state = 0 }
 	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;2;"+state+"\n")	
-end
-
-
-
-
-rule "TV Code Volume Up"
-when 
-    Item V_IRSENDER_212_22 changed
-then
-	var String[] itemName = V_IRSENDER_212_22.getName().toString().split("_")
-	var long dpayload = 551502015
-	sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;32;"+dpayload+"\n")	
-	println("xxx TV Code Volume Up:    ")
-
-end
-
-
-rule "TV Code Volume Down"
-when 
-    Item V_IRSENDER2_212_22 changed
-then
-	var String[] itemName = V_IRSENDER2_212_22.getName().toString().split("_")
-	var long dpayload = 551534655
-	//sendCommand(Arduino, itemName.get(3)+";"+itemName.get(4)+";1;0;32;"+dpayload+"\n")	
-	print("TV Code Volume Down:    ")
-	//println(itemName.get(3)+";"+itemName.get(4)+";1;0;32;"+dpayload+"\n")
-	sendCommand(Arduino, "212;22;1;0;32;551534655\n")
-	println("212;22;1;0;32;551534655")
-end
-
-
-rule "TV Buttons"
-when 
-    Item TV_Command changed
-then
-	var Integer NODE_IR = 212
-	var Integer CID_IR = 22
-	var Number buttonval = TV_Command.state as DecimalType 
-	
-	
-	
-	//var String[] itemName = V_IRSENDER_212_22.getName().toString().split("_")
-	//var long dpayload = 551502015
-	var Number dpayload = buttonval
-	//sendCommand(Arduino, itemName.get(2)+";"+itemName.get(3)+";1;0;32;"+dpayload+"\n")	
-	sendCommand(Arduino, NODE_IR+";"+CID_IR+";1;0;32;"+dpayload+"\n")	
-	println("TV Button"+NODE_IR+"_"+CID_IR+"_"+buttonval)
-	// first ON command, so create a timer to turn the light off again
-	 // subsequent ON command, so reschedule the existing timer
-		// if(timer==null) {	
-			// timer = createTimer(now.plusSeconds(10)) [|
-				// sendCommand(Light_GF_Corridor_Ceiling, OFF)
-			// ]
-		// } else {
-			// timer.reschedule(now.plusSeconds(10))
-		// }
-
 end
 
 
@@ -634,19 +514,6 @@ rule "Converter HSB RGB LED"
 		println(RGBhexstr)
 		println("")
 end
-
-// rule "TIMER INIT"
-	// when
-		// System started
-	// then
-		// var Number timernum = 33
-//		if(DimmedLight.state instanceof DecimalType ) percent = DimmedLight.state as DecimalType
-		// if(sleep_timer2.state!=NULL){
-		// postUpdate(sleep_timer2, timernum);
-		// }
-// end
-
-
 
 
 
